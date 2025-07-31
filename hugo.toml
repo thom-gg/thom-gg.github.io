@@ -1,0 +1,8 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-us'
+title = 'Thom - Blog'
+theme = 'terminal'
+
+[params]
+    readMore = "More"
+    fullWidthTheme = true
