@@ -6,3 +6,7 @@ theme = 'terminal'
 [params]
     readMore = "More"
     fullWidthTheme = true
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'
