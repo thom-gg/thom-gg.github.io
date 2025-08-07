@@ -12,6 +12,7 @@
 <div class="{{- $container -}}{{- cond ($.Site.Params.oneHeadingSize | default false) " headings--one-size" "" }}">
 
   {{ partial "header.html" . }}
+  {{ partial "mathjax.html" . }}  <!-- Include MathJax here -->
 
   <div class="content">
     {{ block "main" . }}
