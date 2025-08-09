@@ -66,6 +66,10 @@ void eigen_mat_mul_kernel(Eigen::MatrixXf *A, Eigen::MatrixXf * B, Eigen::Matrix
 
 Would be interesting to dig into Eigen source code to understand how it works (see if it is multi-threaded or sequential for example), but I'll leave it to another day, today is for CUDA !
 
+## Reference: cuBLAS
+To be able to do some comparison, we need a reference: we're going the GEMM method from cuBLAS library (which is a NVIDIA BLAS implementation in CUDA).
+
+
 ## 1 - First CUDA implementation
 
 Very basic, creating one CUDA thread for each cell of the resulting C matrix, with a block dimension of 16x16 threads (kinda arbitrary, i had this number in mind),
@@ -92,7 +96,11 @@ __global__ void cuda_1_mat_mul_kernel(float * A, float * B, float * C, float alp
 }
 ```
 
-=> achieving ~100 GFLOP/s, pretty good speedup compared to the first CPU implementation, as expected and kinda obvious since we went from sequential to parallel, but it's only the beginning ! Let's see what kind of optimizations we can implement.
+
+{{< image src="benchmark_1.png" width="" >}}
+
+=> achieving ~100 GFLOP/s, pretty good speedup compared to the first CPU implementation, as expected and kinda obvious since we went from sequential to parallel, but as we see on the graph it's only the beginning ! Let's see what kind of optimizations we can implement.
+
 
 ## 2 - Memory coalescing
 
@@ -116,7 +124,10 @@ int col = threadIdx.x + blockIdx.x * blockDim.x;
 int row = threadIdx.y + blockIdx.y + blockDim.y;
 ```
 
-This tiny modification drastically changes how data is accessed during the kernel execution, and brings us to ~285 GFLOP/s.
+{{< image src="benchmark_2.png" width="" >}}
+
+
+This tiny modification drastically changes how data is accessed during the kernel execution, and brings us to ~430 GFLOP/s.
 
 
 ## 3 - Shared memory / tiled matrix multiplication
@@ -135,5 +146,12 @@ One tile represents one thread block.
 
 Here for 4x3 and 3x4 matrices, each cell is a dot product of 3 elements and as we use 2x2 tiles, we'll need two iterations of this to compute for each cell. We lose a bit of parallelism here, as we need to wait for a tiling phase to be completed before continuing, but the speedup gained from Shared Memory still makes it better than having all threads read from global memory while they could (literally) share memory.
 
-Brings us to ~470 GFLOP/s.
+{{< image src="benchmark_3.png" width="" >}}
+
+
+This kernel version brings us to around 800 GFLOP/s, but we are still far from cuBLAS (notice that the y-scale is logarithmic on the graph).
+
+## To be continued
+
+There is still much to do in this project, the optimizations implemented here are very basic, but I figured I should dive deeper into CUDA to really understand all of this, so I'll come back later !
 
